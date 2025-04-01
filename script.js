@@ -1,52 +1,51 @@
-
-// const url = "https://api.mymemory.translated.net/get"; // MyMemory API endpoint
-// const getTranslation = async () => {
-    
-//     let baselang = document.getElementById("from-language").value;
-//     let targetlang=document.getElementById("to-language").value;
-//     let msg=document.getElementById("input-text").value;
-    
-//     let finalurl = `${url}?q=${encodeURIComponent(msg)}&langpair=${baselang}|${targetlang}`; // Corrected here
-
-//     const res = await fetch(finalurl);
-//     const jsonResponse = await res.json(); // Parse the JSON response
-//     let outputmsg=jsonResponse.responseData.translatedText;
-//     document.getElementById("output-text").innerHTML=outputmsg;
-//     console.log(jsonResponse.responseData.translatedText); // Log the translated text
-// }
-// const buttton=document.getElementsByTagName("button")[0]
-// buttton.addEventListener("click",()=>{
-//     getTranslation();
-// })
-
 const url = "https://api.mymemory.translated.net/get"; // MyMemory API endpoint
 
+let fromLang=document.getElementById("from-language");
+let toLang=document.getElementById("to-language");
+let inputText=document.getElementById("input-text");
+let outputText=document.getElementById("output-text");
+
+const debounce = (func, delay) => {
+    let timeout;
+    return function (...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), delay);
+    };
+};
+
 const getTranslation = async () => {
-    let baselang = document.getElementById("from-language").value;
-    let targetlang = document.getElementById("to-language").value;
-    let msg = document.getElementById("input-text").value;
+    let baselang =fromLang.value;
+    let targetlang = toLang.value;
+    let msg = inputText.value;
 
-    // Display a loading message
-    document.getElementById("output-text").innerHTML = "getting response....";
 
-    let finalurl = `${url}?q=${encodeURIComponent(msg)}&langpair=${baselang}|${targetlang}`; // Corrected here
+    outputText.innerHTML = "Translating...";
 
+    if (msg.trim() === "") {
+        outputText.innerHTML = "";
+        return;
+    }
+
+    let finalurl = `${url}?q=${encodeURIComponent(msg)}&langpair=${baselang}|${targetlang}`;
     try {
         const res = await fetch(finalurl);
-        const jsonResponse = await res.json(); // Parse the JSON response
+        const jsonResponse = await res.json();
         let outputmsg = jsonResponse.responseData.translatedText;
 
-        // Display the translated message
-        document.getElementById("output-text").innerHTML = outputmsg;
-        console.log(outputmsg); // Log the translated text
+        outputText.innerHTML = outputmsg;
     } catch (error) {
-        // Handle any errors that may occur
-        document.getElementById("output-text").innerHTML = "Error fetching translation.";
+
+        outputText.innerHTML = "Error fetching translation.";
         console.error("Error:", error);
     }
-}
+};
 
-const button = document.getElementsByTagName("button")[0];
-button.addEventListener("click", () => {
-    getTranslation();
+const debouncedTranslation = debounce(getTranslation, 700);
+
+
+inputText.addEventListener("input", debouncedTranslation);
+fromLang.addEventListener("change", debouncedTranslation);
+toLang.addEventListener("change", debouncedTranslation);
+document.getElementById("Refresh-btn").addEventListener("click", () => {
+    location.reload();
 });
